@@ -32,21 +32,14 @@ migrate_2019 <- migrate_2019 %>%
 
 # Inclusionary housing polygons ####
 #inc_housing_polygons<- read_csv("data/inclusionaryhousing_areas.csv")
-
 #inclusionary_zoning_projects <- inc+housing_polygons$ProjectNam
-
-#print(inclusionary_zoning_projects)
 
 # Affordable housing Production by Building ####
 #buildings_data <- read_csv("data/Affordable_Housing_Production_by_Building.csv")
 
-#See if any projects are not represented in buildings data. None found directly
-#setdiff(inclusionary_zoning_projects, buildings_data$`Project Name`)
-
-#unique(buildings_data$`Project Name`)
-
 # Affordable housing production by Project ####
 #projects_data <- read_csv("data/Affordable_Housing_Production_by_Project.csv")
+
 
 #Inclusionary Zoning data! ####
 
@@ -80,5 +73,24 @@ mih_developments_clean <- mih_developments_clean%>%
   select(-OBJECTID, -IH_Floor_Area_Transferred, -IH_Floor_Area_Balance,
          -Comp_IH_Floor_Area)
 
-write.csv(mih_developments_clean, "mih_developments_clean.csv", row.names = FALSE)
+mih_sf <- mih_developments_clean %>%
+  st_as_sf(
+    coords = c("x", "y"), 
+    crs = 2263  # New York State Plane Long Island Zone coordinate system
+  )
 
+# Transform to WGS84 (standard lat/long)
+mih_sf_wgs84 <- st_transform(mih_sf, crs = 4326)
+
+# Add longitude and latitude columns
+mih_developments_clean <- mih_sf_wgs84 %>%
+  mutate(
+    Longitude = st_coordinates(.)[,1],
+    Latitude = st_coordinates(.)[,2]
+  )
+
+# Save as geopackage
+#st_write(mih_developments_clean, "data/mih_developments_clean.gpkg")
+#write.csv(mih_developments_clean, "data/mih_developments_clean.csv", row.names = FALSE)
+
+saveRDS(mih_developments_clean, "data/mih_developments_clean.rds")
