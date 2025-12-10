@@ -97,27 +97,11 @@ bg_nyc <- block_groups(
   class  = "sf"
 ) %>%
   st_transform(4326)
-  
-
-# Tracts
-tr_nyc <- tracts(
-  state  = "NY",
-  county = c("Bronx", "Kings", "New York", "Queens", "Richmond"),
-  year   = 2010,
-  cb     = TRUE,
-  class  = "sf"
-) %>%
-  st_transform(4326) %>%
-  select(
-    tr_GEOID = GEO_ID,
-    geometry
-  )
 
 
 # Join tracts, then block groups
 mih_sf_geo <- mih_sf_wgs84 %>%
-  st_join(tr_nyc, join = st_within) %>%   
-  st_join(bg_nyc, join = st_within)     
+  st_join(bg_nyc, join = st_intersects)     
 
 ### ---- Final mutate: lon/lat + IDs ---- ####
 
@@ -127,5 +111,9 @@ mih_developments_clean <- mih_sf_geo %>%
     Latitude  = st_coordinates(.)[, 2]
   ) 
 
+#BG
+mih_developments_clean <- mih_developments_clean %>%
+  mutate(
+    BG = paste0(STATE, COUNTY, TRACT, BLKGRP))
 
 saveRDS(mih_developments_clean, "data/clean/mih_developments_clean.rds")
