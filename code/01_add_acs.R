@@ -77,7 +77,6 @@ nyc_all_with_acs <- nyc_all %>%
 
 write_rds(nyc_all_with_acs, "data/clean/nyc_all_years.rds")
 
-#### LOAD IN AND CLEAN MIGRATE DATA ####
 
 mih_developments_clean <- readRDS("data/clean/mih_developments_clean.rds")
 
