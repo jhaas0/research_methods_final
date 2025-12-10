@@ -48,7 +48,7 @@ for(yr in years){
 
 #### LOAD and CLEAN Inclusionary Zoning data ####
 
-inclusionary_zoning_data <- read.csv("data/All HPD Inclusionary Housing Sites _Query result.csv")
+inclusionary_zoning_data <- read.csv("data/raw/All HPD Inclusionary Housing Sites _Query result.csv")
 MIH_projects <- inclusionary_zoning_data %>%
   filter(Label %in% c("MIH Site", "MIH Development"))
 #write.csv(mandatory_zoning_projects, "MIH_projects")
