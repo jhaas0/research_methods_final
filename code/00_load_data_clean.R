@@ -78,20 +78,54 @@ mih_developments_clean <- mih_developments_clean%>%
   select(-OBJECTID, -IH_Floor_Area_Transferred, -IH_Floor_Area_Balance,
          -Comp_IH_Floor_Area)
 
+#Clean geographic info and make into sf object ####
+
 mih_sf <- mih_developments_clean %>%
   st_as_sf(
     coords = c("x", "y"), 
-    crs = 2263  # New York State Plane Long Island Zone coordinate system
-  )
+    crs = 3857)  # WGS83 Web mecator
 
 # Transform to WGS84 (standard lat/long)
 mih_sf_wgs84 <- st_transform(mih_sf, crs = 4326)
 
-# Add longitude and latitude columns
-mih_developments_clean <- mih_sf_wgs84 %>%
-  mutate(
-    Longitude = st_coordinates(.)[,1],
-    Latitude = st_coordinates(.)[,2]
+# Block groups
+bg_nyc <- block_groups(
+  state  = "NY",
+  county = c("Bronx", "Kings", "New York", "Queens", "Richmond"),
+  year   = 2010,
+  cb     = TRUE,
+  class  = "sf"
+) %>%
+  st_transform(4326)
+  
+
+# Tracts
+tr_nyc <- tracts(
+  state  = "NY",
+  county = c("Bronx", "Kings", "New York", "Queens", "Richmond"),
+  year   = 2010,
+  cb     = TRUE,
+  class  = "sf"
+) %>%
+  st_transform(4326) %>%
+  select(
+    tr_GEOID = GEO_ID,
+    geometry
   )
+
+
+# Join tracts, then block groups
+mih_sf_geo <- mih_sf_wgs84 %>%
+  st_join(tr_nyc, join = st_within) %>%   
+  st_join(bg_nyc, join = st_within)     
+
+### ---- Final mutate: lon/lat + IDs ---- ####
+
+mih_developments_clean <- mih_sf_geo %>%
+  mutate(
+    Longitude = st_coordinates(.)[, 1],
+    Latitude  = st_coordinates(.)[, 2]
+  ) 
+
 
 saveRDS(mih_developments_clean, "data/clean/mih_developments_clean.rds")
