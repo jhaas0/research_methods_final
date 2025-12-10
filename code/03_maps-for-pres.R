@@ -20,11 +20,7 @@ options(tigris_use_cache = TRUE)
 
 years <- 2011:2019
 
-nyc_all <- map_dfr(
-  years,
-  ~ read_rds(paste0("data/clean/", .x, "_nyc.rds")) %>%
-  mutate(year = .x)
-)
+nyc_all <- read_rds(paste0("data/clean/nyc_all_years.rds"))
 
 neighborhood_boundaries <- st_read("data/nynta2010_25d/nynta2010.shp")
 
