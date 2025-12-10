@@ -1,4 +1,4 @@
-#### LOAD IN AND CLEAN MIGRATE DATA ####
+
 
 # Jacob & Fabian
 # December 2025
@@ -13,7 +13,7 @@ library(sf)
 
 #### ---- SETUP ---- ####
 
-setwd("C:/Users/Jacob/Documents/Wagner/RM/research_methods_final")
+setwd("C:/Users/fl1351/Desktop/RM Project Local/research_methods_final")
 
 #remove scientific notation
 options(scipen = 999)
@@ -78,5 +78,9 @@ nyc_all_with_acs <- nyc_all %>%
 write_rds(nyc_all_with_acs, "data/clean/nyc_all_years.rds")
 
 
+mih_developments_clean <- readRDS("data/clean/mih_developments_clean.rds")
 
+#Join data set for analysis
+nyc_full <- bind_rows(nyc_all_with_acs, mih_developments_clean)
 
+saveRDS(nyc_full,"data/clean/nyc_full.rds")
