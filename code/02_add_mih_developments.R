@@ -21,3 +21,16 @@ options(tigris_use_cache = TRUE)
 nyc_all <- read_rds("data/clean/nyc_all_years.rds")
 
 mih_developments <- read_rds("data/clean/mih_developments_clean.rds")
+
+block_groups_ny <- block_groups(state = "NY") %>% 
+  st_transform(st_crs(mih_developments))
+
+#### --- MERGE MIH DATA WITH MiGRATE DATA BY CBG ---- ####
+
+mih_developments_with_census_bg <- mih_developments %>% 
+  st_join(block_groups_ny, 
+          join = st_intersects)
+  
+
+
+

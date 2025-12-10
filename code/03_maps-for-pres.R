@@ -78,6 +78,8 @@ bushwick_flows <- nyc_moves %>%
             pct_same_state  = sum(flow[same_state],  na.rm = TRUE) /
               sum(flow, na.rm = TRUE))
 
+write_csv(bushwick_flows, "output/bushwick_flows.csv")
+
 
 # 
 # #create flow map for brooklyn
@@ -109,7 +111,7 @@ bushwick_flows_for_map <- nyc_moves %>%
   summarize(total_flow = sum(flow)) %>% 
   group_by(year) %>% 
   arrange(desc(total_flow)) %>% 
-  slice(1:10) %>% 
+  slice(1:20) %>% 
   ungroup()
 
 #2019 map - outside state
@@ -138,21 +140,37 @@ ggplot() +
   geom_sf(data = us_counties, fill = "gray95", color = "white", size = 0.1) +
   #geom_sf(data = brooklyn, fill = "gray80", color = "white", size = 0.3) +
   geom_sf(data = bushwick, fill = "#2C5F8D", color = "white", size = 0.5) +
-  geom_segment(data = bushwick_lines,
-               aes(x = X, y = Y, xend = dest_X, yend = dest_Y, 
-                   size = total_flow, alpha = total_flow),
-               color = "#D55E00", arrow = arrow(length = unit(0.2, "cm"))) +
+  geom_curve(
+    data = bushwick_lines,
+    aes(
+      x = X, y = Y,
+      xend = dest_X, yend = dest_Y,
+      size = total_flow,
+      alpha = total_flow
+    ),
+    color = "#D55E00",
+    curvature = -0.2,
+    arrow = arrow(length = unit(0.2, "cm"))
+  ) + 
   geom_sf(data = bushwick_flow_map, aes(size = total_flow), 
           color = "#D55E00", alpha = 0.6) +
   scale_size_continuous(range = c(0.5, 3), name = "Migration Flow") +
   scale_alpha_continuous(range = c(0.4, 0.8), guide = "none") +
   coord_sf(xlim = c(-125, -65), ylim = c(25, 50)) +
-  labs(title = "Top Migration Flows to Bushwick",
+  labs(title = "Top Migration Inflows to Bushwick",
        subtitle = "By origin county (2019)") +
   theme_minimal() +
   theme(legend.position = "bottom", 
         axis.text = element_blank(), 
-        axis.title = element_blank())
+        axis.title = element_blank(), 
+        plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 14))
+
+ggsave("output/bushwick_map_1.png", 
+       last_plot(), 
+       height = 6, 
+       width = 12, 
+       units = "in")
 
 
 ##### get map just for ny ####
@@ -203,18 +221,148 @@ ggplot() +
           fill = "gray95", color = "white", size = 0.1) +
   #geom_sf(data = brooklyn, fill = "gray80", color = "white", size = 0.3) +
   geom_sf(data = bushwick, fill = "#2C5F8D", color = "white", size = 0.5) +
-  geom_segment(data = bushwick_lines,
-               aes(x = X, y = Y, xend = dest_X, yend = dest_Y, 
-                   size = total_flow, alpha = total_flow),
-               color = "#D55E00", arrow = arrow(length = unit(0.2, "cm"))) +
+  geom_curve(
+    data = bushwick_lines,
+    aes(
+      x = X, y = Y,
+      xend = dest_X, yend = dest_Y,
+      size = total_flow,
+      alpha = total_flow
+    ),
+    color = "#D55E00",
+    curvature = -0.2,
+    arrow = arrow(length = unit(0.2, "cm"))
+  ) + 
   geom_sf(data = bushwick_flow_map_within, aes(size = total_flow), 
           color = "#D55E00", alpha = 0.6) +
   scale_size_continuous(range = c(0.5, 3), name = "Migration Flow") +
   scale_alpha_continuous(range = c(0.4, 0.8), guide = "none") +
   #coord_sf(xlim = c(-125, -65), ylim = c(25, 50)) +
-  labs(title = "Top Migration Flows to Bushwick",
+  labs(title = "Top Migration Inflows to Bushwick: NYC",
        subtitle = "By origin county (2019)") +
   theme_minimal() +
   theme(legend.position = "bottom", 
         axis.text = element_blank(), 
         axis.title = element_blank())
+
+
+ggsave("output/bushwick_map_2.png", 
+       last_plot(), 
+       height = 6, 
+       width = 12, 
+       units = "in")
+
+
+#### ----- Bushwick NYC map by tract ---- ####
+
+nyc_tracts <- ny_tracts %>% 
+  filter(str_detect(GEOID10, "^36(005|047|061|081|085)")) %>% 
+  mutate(
+    pct_land = ALAND10 / (ALAND10 + AWATER10)
+  ) %>% 
+  filter(pct_land > 0.05)
+
+# Bushwick inflows by TRACT (within NYC)
+bushwick_flows_for_map_within_state <- nyc_moves %>% 
+  filter(str_sub(destination, 1, 11) %in% bushwick_tracts) %>%
+  mutate(
+    origin_tract = str_sub(origin, 1, 11),
+    destination_tract = str_sub(destination, 1, 11),
+    same_neighborhood = origin_tract %in% bushwick_tracts,
+    same_county = str_sub(origin, 1, 5) == str_sub(destination, 1, 5),
+    same_state = str_sub(origin, 1, 2) == str_sub(destination, 1, 2)
+  ) %>% 
+  filter(
+    same_state,
+    !same_neighborhood
+  ) %>% 
+  group_by(year, origin_tract) %>% 
+  summarize(total_flow = sum(flow), .groups = "drop") %>% 
+  filter(str_detect(origin_tract, "^36(005|047|061|081|085)"))
+
+
+bushwick_ny_flows_for_map_2019 <- bushwick_flows_for_map_within_state %>% 
+  filter(year == 2019) %>% 
+  mutate(
+    flow_bucket = cut(
+      total_flow,
+      breaks = seq(0, max(total_flow, na.rm = TRUE) + 5, by = 5),
+      right = FALSE,
+      include.lowest = TRUE
+    )
+  )
+
+
+bushwick_flow_map_within <- nyc_tracts %>%
+  filter(GEOID10 %in% bushwick_ny_flows_for_map_2019$origin_tract) %>% 
+  left_join(
+    bushwick_ny_flows_for_map_2019,
+    by = c("GEOID10" = "origin_tract")
+  ) %>% 
+  st_centroid()
+
+bushwick_centroid <- bushwick %>% 
+  st_centroid() %>% 
+  st_transform(st_crs(bushwick_flow_map_within))
+
+
+bushwick_lines <- bushwick_flow_map_within %>% 
+  st_drop_geometry() %>% 
+  bind_cols(
+    st_coordinates(bushwick_flow_map_within) %>% as_tibble()
+  ) %>% 
+  mutate(
+    dest_X = st_coordinates(bushwick_centroid)[1],
+    dest_Y = st_coordinates(bushwick_centroid)[2]
+  )
+
+
+ggplot() +
+  geom_sf(
+    data = nyc_tracts,
+    fill = "gray95",
+    color = "darkgrey",
+    size = 0.05
+  ) +
+  geom_sf(
+    data = bushwick,
+    fill = "#2C5F8D",
+    color = "white",
+    size = 0.5
+  ) +
+  # geom_curve(
+  #   data = bushwick_lines,
+  #   aes(
+  #     x = X, y = Y,
+  #     xend = dest_X, yend = dest_Y,
+  #     size = total_flow,
+  #     alpha = total_flow
+  #   ),
+  #   color = "#D55E00",
+  #   curvature = -0.2,
+  #   arrow = arrow(length = unit(0.2, "cm"))
+  # ) +
+  geom_sf(
+    data = bushwick_flow_map_within,
+    aes(size = total_flow),
+    color = "#D55E00",
+    alpha = 0.6
+  ) +
+  scale_size_continuous(range = c(0.3, 2.5), name = "Migration Flow") +
+  scale_alpha_continuous(range = c(0.4, 0.8), guide = "none") +
+  labs(
+    title = "Top Migration Inflows to Bushwick: NYC",
+    subtitle = "By origin census tract (2019)"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom", 
+    axis.text = element_blank(), 
+    axis.title = element_blank()
+  )
+
+ggsave("output/bushwick_map_3.png", 
+       last_plot(), 
+       height = 6, 
+       width = 12, 
+       units = "in")
