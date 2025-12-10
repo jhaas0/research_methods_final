@@ -3,7 +3,6 @@
 # Jacob & Fabian
 # December 2025
 
-
 library(tidyverse)
 library(janitor)
 library(tigris)
@@ -22,7 +21,6 @@ options(scipen = 999)
 
 options(tigris_use_cache = TRUE)
 
-
 #### ---- LOAD AND FILTER DATA TO NYC ---- ####
 
 # Function to filter and clean NYC migration data for a given year
@@ -38,8 +36,9 @@ clean_nyc_migration <- function(year) {
   migrate_nyc <- migrate_data %>% 
     clean_names() %>% 
     mutate(origin = str_pad(origin, width = 12, side = "left", pad = "0")) %>% 
-    filter(str_detect(origin, "^(36005|36047|36061|36081|36085)") | 
-             str_detect(destination, "^(36005|36047|36061|36081|36085)"))
+    filter(
+      str_detect(origin, "^(36005|36047|36061|36081|36085)") | 
+        str_detect(destination, "^(36005|36047|36061|36085|36081)"))
   
   # Save to data/clean folder
   output_path <- paste0("data/clean/", year, "_nyc.rds")
@@ -49,9 +48,6 @@ clean_nyc_migration <- function(year) {
   message("Saved cleaned data to: ", output_path)
 }
 
-for(yr in years){
-  
+for (yr in years){
   clean_nyc_migration(yr)
-  
 }
-
