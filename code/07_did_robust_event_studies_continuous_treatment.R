@@ -16,6 +16,7 @@ devtools::install_github("bcallaway11/contdid")
 
 library(contdid)
 
+set.seed(5662)
 
 #### ---- SETUP AND LOAD DATA ---- ####
 
