@@ -11,6 +11,7 @@ library(sf)
 library(fixest)
 library(did)
 
+set.seed(5662)
 
 #### ---- SETUP AND LOAD DATA ---- ####
 
@@ -83,6 +84,8 @@ run_cs_event_study <- function(dep_var,
   cat("\nSummary:\n")
   print(summary(es))
   
+  write_rds(es, paste0("output/regression_models/cs_", dep_var, ".rds"))
+  
   # Return results
   return(list(
     att_gt = out,
@@ -98,7 +101,7 @@ cs_high_pov <- run_cs_event_study("pct_high_pov_rate",
                                   y_label = "Change in Percent of High-Poverty Inflows",
                                   title = "Change in Percent of High-Poverty Inflows Before/After IH")
 
-cs_pov_flows <- run_cs_event_study("num_inflows_high_pov_rate",
+cs_poverty_flows <- run_cs_event_study("num_inflows_high_pov_rate",
                                    y_label = "Change in Number of High Poverty Inflows",
                                    title = "Change in High-Poverty Inflows Before/After IH")
 
@@ -106,15 +109,11 @@ cs_avg_pov <- run_cs_event_study("avg_pov_rate",
                                  y_label = "Change in Average Poverty Rate",
                                  title = "Change in Average Poverty Rate of Inflows Before/After IH")
 
-cs_median_inc <- run_cs_event_study("avg_median_income", 
+cs_median_income <- run_cs_event_study("avg_median_income", 
                                     y_label = "Change in Median Income",
                                     title = "Change in Average Median Income of Inflows Before/After IH")
 
 cs_oos_flows <- run_cs_event_study("pct_inflows_out_of_state",
                                    y_label = "Change in Pct of OOS of Inflows",
                                    title = "Change in Percent of OOS Inflows Before/After IH")
-
-
-
-
 

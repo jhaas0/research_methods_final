@@ -10,6 +10,7 @@ library(tigris)
 library(sf)
 library(fixest)
 library(did)
+library(scales)
 
 
 #### ---- SETUP AND LOAD DATA ---- ####
@@ -49,7 +50,7 @@ run_event_study <- function(dep_var,
   if(continuous == TRUE){
     formula <- as.formula(paste0(dep_var, " ~ i(rel_year_bucket, eventual_ln_ih_floor_area, ref = c(-1, -999)) | destination + year"))
   }else{
-    formula <- as.formula(paste0(dep_var, " ~ i(rel_year_bucket, ref = c(-1, -999)) | destination + year"))
+    formula <- as.formula(paste0(dep_var, " ~ i(rel_year, ref = c(-1, -999)) | destination + year"))
   }
   
   # Run event study regression
@@ -68,12 +69,20 @@ run_event_study <- function(dep_var,
   
   # Generate plot
   png(output_file, width = 2000, height = 1500, res = 300)
+  
   iplot(model,  
         xlab = "Years Relative to Treatment",
         ylab = y_label,
         main = title,
         ref.line = ref_line)
+  
   dev.off()
+  
+  if(continuous == TRUE){
+    write_rds(model, paste0("output/regression_models/es_", dep_var, "_continuous.rds"))
+  }else{
+    write_rds(model, paste0("output/regression_models/es_", dep_var, ".rds"))
+  }
   
   # Print confirmation and return model
   cat("Event study saved to:", output_file, "\n")
@@ -118,28 +127,26 @@ es_high_pov_continuous <- run_event_study("pct_high_pov_rate",
                                           ref_line = 5, 
                                           continuous = TRUE)
 
-es_avg_pov <- run_event_study("avg_pov_rate",
+es_avg_pov_continuous <- run_event_study("avg_pov_rate",
                               y_label = "Change in Average Poverty Rate",
                               title = "Effect of More Affordable Sqft on Average Poverty Rate",
                               ref_line = 5,
                               continuous = TRUE)
 
-es_median_income <- run_event_study("avg_median_income",
+es_median_income_continuous <- run_event_study("avg_median_income",
                                     y_label = "Change in Median Income",
                                     title = "Effect of More Affordable Sqft on Median Income",
                                     ref_line = 5,
                                     continuous = TRUE)
 
-es_total_flows <- run_event_study("num_inflows",
+es_total_flows_continuous <- run_event_study("num_inflows",
                                   y_label = "Change in Number of Inflows",
                                   title = "Effect of More Affordable Sqft on Number of Inflows",
                                   ref_line = 5,
                                   continuous = TRUE)
 
-es_poverty_flows <- run_event_study("num_inflows_high_pov_rate",
+es_poverty_flows_continuous <- run_event_study("num_inflows_high_pov_rate",
                                     y_label = "Change in Number of High-Poverty Inflows",
                                     title = "Effect of More Affordable Sqft on High-Poverty Inflows",
                                     ref_line = 5,
                                     continuous = TRUE)
-
-

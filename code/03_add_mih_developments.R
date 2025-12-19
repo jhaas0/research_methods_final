@@ -28,7 +28,8 @@ ih_developments_clean <- read_rds("data/clean/ih_developments_clean.rds")
 #### --- MERGE MIH DATA WITH MIGRATE DATA BY CBG ---- ####
 
 nyc_all_clean <- nyc_all %>% 
-  mutate(destination = as.character(str_pad(destination, width = 12, side = "left", pad = "0")))
+  mutate(destination = as.character(str_pad(destination, width = 12, side = "left", pad = "0"))) %>% 
+  filter(origin != destination)
 
 #get indicator variable for when a block group has an MIH property open
 ih_developments_by_bg <- ih_developments_clean %>% 

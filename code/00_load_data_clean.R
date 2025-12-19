@@ -24,8 +24,8 @@ clean_nyc_migration <- function(year) {
   # Queens (36081), Richmond/Staten Island (36085)
   
   # Read the data
-file_path <- paste0("data/raw/", year, ".csv/", year, ".csv")
-migrate_data <- read_csv(file_path)
+  file_path <- paste0("data/raw/", year, ".csv/", year, ".csv")
+  migrate_data <- read_csv(file_path)
   
   # Filter and clean
   migrate_nyc <- migrate_data %>% 
@@ -33,7 +33,8 @@ migrate_data <- read_csv(file_path)
     mutate(origin = str_pad(origin, width = 12, side = "left", pad = "0"), 
            destination = str_pad(destination, width = 12, side = "left", pad = "0")) %>% 
     filter(str_detect(origin, "^(36005|36047|36061|36081|36085)") | 
-             str_detect(destination, "^(36005|36047|36061|36081|36085)"))
+             str_detect(destination, "^(36005|36047|36061|36081|36085)")) %>% 
+    filter(origin != destination)
   
   # Save to data/clean folder
   output_path <- paste0("data/clean/", year, "_nyc.rds")
