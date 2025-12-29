@@ -26,7 +26,8 @@ dataset_for_regressions <- read_rds("data/clean/ih_dataset_for_regressions.rds")
     # Forward-fill: all periods get the eventual treatment intensity
     eventual_ln_ih_floor_area = max(ln_ih_floor_area, na.rm = TRUE)
   ) %>%
-  ungroup()
+  ungroup() %>% 
+  filter((rel_year >= -5 & rel_year <= 4) | rel_year == -999)
 
 
 #Note: claude was used to help functionalize our user-written event study code
@@ -48,7 +49,7 @@ run_event_study <- function(dep_var,
   
   # Build formula dynamically
   if(continuous == TRUE){
-    formula <- as.formula(paste0(dep_var, " ~ i(rel_year_bucket, eventual_ln_ih_floor_area, ref = c(-1, -999)) | destination + year"))
+    formula <- as.formula(paste0(dep_var, " ~ i(rel_year, eventual_ln_ih_floor_area, ref = c(-1, -999)) | destination + year"))
   }else{
     formula <- as.formula(paste0(dep_var, " ~ i(rel_year, ref = c(-1, -999)) | destination + year"))
   }
@@ -93,27 +94,27 @@ run_event_study <- function(dep_var,
 es_high_pov <- run_event_study("pct_high_pov_rate", 
                                y_label = "Change in Percent of High-Poverty Inflows",
                                title = "Change in Percent of High-Poverty Inflows Before/After IH",
-                               ref_line = 5)
+                               ref_line = -1)
 
 es_avg_pov <- run_event_study("avg_pov_rate",
                               y_label = "Change in Average Poverty Rate",
                               title = "Change in Average Poverty Rate of Inflows Before/After IH",
-                              ref_line = 5)
+                              ref_line = -1)
 
 es_median_income <- run_event_study("avg_median_income",
                                     y_label = "Change in Median Income",
                                     title = "Change in Average Median Income of Inflows Before/After IH",
-                                    ref_line = 5)
+                                    ref_line = -1)
 
 es_total_flows <- run_event_study("num_inflows",
                                   y_label = "Change in Number of Inflows",
                                   title = "Change in Number of Inflows Before/After IH",
-                                  ref_line = 5)
+                                  ref_line = -1)
 
 es_poverty_flows <- run_event_study("num_inflows_high_pov_rate",
                                     y_label = "Change in Number of High Poverty Inflows",
                                     title = "Change in High-Poverty Inflows Before/After IH",
-                                    ref_line = 5)
+                                    ref_line = -1)
 
 es_oos_flows <- run_event_study("pct_inflows_out_of_state",
                                 y_label = "Change in Pct of OOS of Inflows",
@@ -124,29 +125,29 @@ es_oos_flows <- run_event_study("pct_inflows_out_of_state",
 es_high_pov_continuous <- run_event_study("pct_high_pov_rate", 
                                           y_label = "Change in Percent of High-Poverty Inflows",
                                           title = "Effect of More Affordable Sqft on High-Poverty Inflows",
-                                          ref_line = 5, 
+                                          ref_line = -1, 
                                           continuous = TRUE)
 
 es_avg_pov_continuous <- run_event_study("avg_pov_rate",
                               y_label = "Change in Average Poverty Rate",
                               title = "Effect of More Affordable Sqft on Average Poverty Rate",
-                              ref_line = 5,
+                              ref_line = -1,
                               continuous = TRUE)
 
 es_median_income_continuous <- run_event_study("avg_median_income",
                                     y_label = "Change in Median Income",
                                     title = "Effect of More Affordable Sqft on Median Income",
-                                    ref_line = 5,
+                                    ref_line = -1,
                                     continuous = TRUE)
 
 es_total_flows_continuous <- run_event_study("num_inflows",
                                   y_label = "Change in Number of Inflows",
                                   title = "Effect of More Affordable Sqft on Number of Inflows",
-                                  ref_line = 5,
+                                  ref_line = -1,
                                   continuous = TRUE)
 
 es_poverty_flows_continuous <- run_event_study("num_inflows_high_pov_rate",
                                     y_label = "Change in Number of High-Poverty Inflows",
                                     title = "Effect of More Affordable Sqft on High-Poverty Inflows",
-                                    ref_line = 5,
+                                    ref_line = -1,
                                     continuous = TRUE)
